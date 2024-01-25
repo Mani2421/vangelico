@@ -1,0 +1,5 @@
+--[[
+    VANGELICO HEIST SCRIPT
+    SERVER-SIDE 
+    AUTHOR: MANI
+]]
