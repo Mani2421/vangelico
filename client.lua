@@ -43,6 +43,19 @@ end
 
 ---------------------------------------------------------
 
+-- Load particles
+function loadParticle(ptfxAsset)
+	if not HasNamedPtfxAssetLoaded(ptfxAsset) then
+    RequestNamedPtfxAsset(ptfxAsset)
+    end
+    while not HasNamedPtfxAssetLoaded(ptfxAsset) do
+    Citizen.Wait(0)
+    end
+    SetPtfxAssetNextCall(ptfxAsset)
+end
+
+---------------------------------------------------------
+
 -- Find case by looking up its corresponding index in the array
 local function findCaseByArrayIndex(index)
     return cases[index]
@@ -98,7 +111,7 @@ function findFacingCaseIndex()
     end
 
     if Config.Debug then
-        print("can't find case")
+        print("Can't find case index")
     end
     return nil -- Return nil if no case is found in the player's facing direction
 end
@@ -106,7 +119,7 @@ end
 
 ---------------------------------------------------------
 
--- Function to make the player walk to the case and perform smash n grab animation
+-- handle animation and loot logic
 local function robCase(caseIndex)
     local playerPed = PlayerPedId()
     local caseCoords = vector3(cases[caseIndex].x, cases[caseIndex].y, cases[caseIndex].z)
@@ -122,7 +135,6 @@ local function robCase(caseIndex)
         ClearPedTasks(playerPed)
     end
 
-    -- Face the case
     local playerHeading = GetEntityHeading(playerPed)
     local caseHeading = math.deg(math.atan2(caseCoords.y - GetEntityCoords(playerPed).y, caseCoords.x - GetEntityCoords(playerPed).x))
     local headingDifference = caseHeading - playerHeading
@@ -130,7 +142,6 @@ local function robCase(caseIndex)
     if headingDifference > 180.0 then headingDifference = headingDifference - 360.0 end
     TaskTurnPedToFaceCoord(playerPed, caseCoords.x, caseCoords.y, caseCoords.z, -1)
 
-    -- Wait for the ped to face the case
     while headingDifference > 5.0 or headingDifference < -5.0 do
         Citizen.Wait(0)
         headingDifference = caseHeading - playerHeading
@@ -141,6 +152,9 @@ local function robCase(caseIndex)
     -- Play the smash n grab animation
     loadAnim("anim@amb@clubhouse@tutorial@bkr_tut_ig3@")
     TaskPlayAnim(playerPed, "anim@amb@clubhouse@tutorial@bkr_tut_ig3@", "machinic_loop_mechandplayer", 8.0, -8.0, -1, 0, 0, false, false, false)
+    -- Play glass breaking particles
+    loadParticle("scr_jewelheist")
+    StartParticleFxLoopedAtCoord("scr_jewel_cab_smash",caseCoords.x, caseCoords.y, caseCoords.z, 0.0, 0.0, 0.0, 1.0, false, false, false, false)
     Citizen.Wait(5000) -- Adjust the wait time based on the duration of your animation
 
     -- Clear tasks and perform additional logic for robbing the case
@@ -148,16 +162,16 @@ local function robCase(caseIndex)
     cases[caseIndex].isRobbed = true
 end
 
+local function StartCooldown()
+    if Config.IsStoreOnCooldown = false then
+        Wait(Config.CooldownTimeInMinutes * 60000)
+    end
+    if Config.Debug then
+        print("Store is already on cooldown")
+    end
+    return nil
+end
+`
 ---------------------------------------------------------
 -----------------------THREADS---------------------------
 ---------------------------------------------------------
-
-CreateThread(function()
-    local playerPed = PlayerPedID()
-    local caseIndex = findFacingCaseIndex()
-    
-    if not areAllCasesRobbed() then
-        robCase(caseIndex)
-    end
-    Config.IsStoreOnCooldown = true
-end)
