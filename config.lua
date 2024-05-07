@@ -10,7 +10,7 @@ Config.Debug = false -- Additional info for testing and debugging
 
 Config.CooldownTimeInMinutes = 30 -- 30 Minute cooldown after robbery by default, change the value here
 
-Config.IsStoreOnCooldown = true -- Cooldown starts after the whole store has been robbed, we check this with areAllCasesRobbed()
+Config.IsStoreOnCooldown = true -- Cooldown starts after the whole store has been robbed, value is controlled by the HandleCooldown function
 
 Config.WhitelistedWeapons = { -- Stores weapon hashes whitelisted for robbing case
     [1] = GetHashKey("weapon_carbinerifle"),
